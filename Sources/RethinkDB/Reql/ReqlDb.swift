@@ -1,0 +1,2 @@
+public class ReqlDb: ReqlExpr {
+}
