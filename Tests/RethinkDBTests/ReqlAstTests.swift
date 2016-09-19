@@ -1,14 +1,20 @@
 import XCTest
 @testable import RethinkDB
+@testable import TCP
+@testable import Venice
 
 public class ReqlAstTests : XCTestCase {
+    
+    func testVenice() {
+    }
+    
     func testSimpleAst() {
         /*
          r.db("blog").table("users").filter({name: "Michel"})
          */
 
         let expected = "[39,[[15,[[14,[\"blog\"]],\"users\"]],{\"name\":\"Michel\"}]]"
-        let compiled = try! r.db("blog").table("users").filter(["name": "Michel"]).compileToReqlJSON()
+        let compiled = try! r.db("blog").table("users").filter(["name": "Michel"]).reqlJSON()
 
         XCTAssertEqual(expected, compiled)
 
@@ -24,7 +30,7 @@ public class ReqlAstTests : XCTestCase {
         let expected = "[64,[[69,[[2,[1,2]],[24,[[10,[1]],[10,[2]]]]]],10,20]]"
         let compiled = try! r.`do`(10, 20, { (x: ReqlExpr, y: ReqlExpr) -> ReqlArg in
             return r.add(x, y)
-        }).compileToReqlJSON()
+        }).reqlJSON()
 
         XCTAssertEqual(expected, compiled)
     }
@@ -38,7 +44,7 @@ public class ReqlAstTests : XCTestCase {
 
         let expected = "[15,[\"users\"],{\"read_mode\":\"single\"}]"
 
-        let compiled = try! r.table("users", ReqlTableOpts(readMode: .single)).compileToReqlJSON()
+        let compiled = try! r.table("users", ReqlTableOpts(readMode: .single)).reqlJSON()
 
         XCTAssertEqual(expected, compiled)
     }
@@ -48,7 +54,7 @@ public class ReqlAstTests : XCTestCase {
         do {
             _ = try r.table("users").filter({ (bad: Data, function: Bool) -> Any in
                 return "Hello"
-            }).compileToReqlJSON()
+            }).reqlJSON()
         } catch let error as RethinkDB.Error {
             guard case let .reql(backtrace) = error.code, backtrace != nil else {
                 XCTFail("Invalid Error Code: \(error.code)")
