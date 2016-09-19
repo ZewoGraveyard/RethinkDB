@@ -27,6 +27,15 @@ class ReqlProtocol {
         case clientError = 16
         case compileError = 17
         case runtimeError = 18
+        
+        var final: Bool {
+            switch self {
+            case .successPartial:
+                return false
+            default:
+                return true
+            }
+        }
     }
 
     enum ResponseNoteType: Int {

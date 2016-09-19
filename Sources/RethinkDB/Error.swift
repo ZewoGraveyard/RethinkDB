@@ -1,4 +1,6 @@
 import Foundation
+@_exported import Core
+@_exported import Venice
 
 public struct Error : Swift.Error, CustomStringConvertible, CustomDebugStringConvertible {
     public enum Code {
