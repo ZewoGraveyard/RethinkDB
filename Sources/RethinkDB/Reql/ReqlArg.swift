@@ -1,17 +1,17 @@
 import Foundation
 
 public protocol ReqlArg {
-    func compileToReqlJSON() throws -> String
+    func reqlJSON() throws -> String
 }
 
 extension String : ReqlArg {
-    public func compileToReqlJSON() throws -> String {
+    public func reqlJSON() throws -> String {
         return "\"\(self)\""
     }
 }
 
 extension Bool : ReqlArg {
-    public func compileToReqlJSON() throws -> String {
+    public func reqlJSON() throws -> String {
         if self {
             return "true"
         } else {
@@ -21,40 +21,40 @@ extension Bool : ReqlArg {
 }
 
 extension Int : ReqlArg {
-    public func compileToReqlJSON() throws -> String {
+    public func reqlJSON() throws -> String {
         return "\(self)"
     }
 }
 
 extension UInt : ReqlArg {
-    public func compileToReqlJSON() throws -> String {
+    public func reqlJSON() throws -> String {
         return "\(self)"
     }
 }
 
 extension Float : ReqlArg {
-    public func compileToReqlJSON() throws -> String {
+    public func reqlJSON() throws -> String {
         return "\(self)"
     }
 }
 
 extension Double : ReqlArg {
-    public func compileToReqlJSON() throws -> String {
+    public func reqlJSON() throws -> String {
         return "\(self)"
     }
 }
 
 extension Array : ReqlArg {
-    public func compileToReqlJSON() throws -> String {
+    public func reqlJSON() throws -> String {
         var str = "["
-        str += try ReqlTerm.makeArray.rawValue.compileToReqlJSON()
+        str += try ReqlTerm.makeArray.rawValue.reqlJSON()
         str += ",["
         for (idx, value) in self.enumerated() {
             guard let v = value as? ReqlArg else {
                 throw Error(code: .reql(backtrace: nil), reason: "All items in a ReqlArg array must conform to ReqlArg. '\(value)' does not.")
             }
 
-            str += try v.compileToReqlJSON()
+            str += try v.reqlJSON()
             if idx + 1 < self.count {
                 str += ","
             }
@@ -65,7 +65,7 @@ extension Array : ReqlArg {
 }
 
 extension Dictionary : ReqlArg {
-    public func compileToReqlJSON() throws -> String {
+    public func reqlJSON() throws -> String {
         var str = "{"
         for (idx, element) in self.enumerated() {
             guard let k = element.key as? String else {
@@ -75,9 +75,9 @@ extension Dictionary : ReqlArg {
                 throw Error(code: .reql(backtrace: nil), reason: "All values in a ReqlArg dictionary must conform to ReqlArg. '\(element.value)' does not.")
             }
 
-            str += try k.compileToReqlJSON()
+            str += try k.reqlJSON()
             str += ":"
-            str += try v.compileToReqlJSON()
+            str += try v.reqlJSON()
             if idx + 1 < self.count {
                 str += ","
             }

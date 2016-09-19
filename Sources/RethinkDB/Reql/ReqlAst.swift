@@ -8,7 +8,7 @@ public class ReqlAst {
     fileprivate let opts: [String: Any]
 
     fileprivate let sourceLocation: (file: String, line: Int)
-    fileprivate var compiledJSON: String? = nil
+    fileprivate var cachedReqlJSON: String? = nil
 
     internal init(term: ReqlTerm, args: [Any], parent: ReqlAst?, file: String = #file, line: Int = #line) {
         // get args only
@@ -45,39 +45,39 @@ public class ReqlAst {
 }
 
 extension ReqlAst : ReqlArg {
-    public func compileToReqlJSON() throws -> String {
-        guard self.compiledJSON == nil else {
-            return self.compiledJSON!
+    public func reqlJSON() throws -> String {
+        guard self.cachedReqlJSON == nil else {
+            return self.cachedReqlJSON!
         }
 
-        var compiledJSON: String = ""
+        var cachedReqlJSON: String = ""
         do {
-            compiledJSON += "["
-            compiledJSON += try self.term.rawValue.compileToReqlJSON()
-            compiledJSON += ",["
+            cachedReqlJSON += "["
+            cachedReqlJSON += try self.term.rawValue.reqlJSON()
+            cachedReqlJSON += ",["
 
             for (idx, arg) in self.args.enumerated() {
                 if let arg = arg as? ReqlArg {
-                    compiledJSON += try arg.compileToReqlJSON()
+                    cachedReqlJSON += try arg.reqlJSON()
                 } else if let arg = ReqlFunction(arg) {
-                    compiledJSON += try arg.compileToReqlJSON()
+                    cachedReqlJSON += try arg.reqlJSON()
                 } else {
                     throw Error(code: .reql(backtrace: nil), reason: "Invalid argument type. Got '\(arg.self)'.")
                 }
 
                 if idx + 1 < self.args.count {
-                    compiledJSON += ","
+                    cachedReqlJSON += ","
                 }
             }
-
-            compiledJSON += "]"
+            
+            cachedReqlJSON += "]"
 
             if self.opts.count > 0 {
-                compiledJSON += ","
-                compiledJSON += try opts.compileToReqlJSON()
+                cachedReqlJSON += ","
+                cachedReqlJSON += try opts.reqlJSON()
             }
 
-            compiledJSON += "]"
+            cachedReqlJSON += "]"
         } catch let error as Error {
             guard case .reql(let backtrace) = error.code else {
                 throw error
@@ -90,14 +90,7 @@ extension ReqlAst : ReqlArg {
             throw Error(code: .reql(backtrace: parts.map { $0! } .joined(separator: "\n")), reason: "Could not compile reql.")
         }
 
-        self.compiledJSON = compiledJSON
-        return compiledJSON
-    }
-}
-
-extension ReqlAst {
-    public func run() throws -> Map {
-        let pool = ReqlTopLevel.connectionPool
-        return try pool.run(ast: self)
+        self.cachedReqlJSON = cachedReqlJSON
+        return cachedReqlJSON
     }
 }
