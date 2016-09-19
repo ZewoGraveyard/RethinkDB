@@ -1,2 +1,1 @@
-public class ReqlDb: ReqlExpr {
-}
+public class ReqlDb : ReqlExpr {}

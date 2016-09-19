@@ -1,11 +1,10 @@
-public struct ReqlTableCreateOpts: ReqlOpts {
-    
+public struct ReqlTableCreateOpts : ReqlOpts {
     public let primaryKey: String?
     public let durability: ReqlDurability?
     public let shards: Int?
     public let replicas: Any?
     public let primaryReplicaTag: String?
-    
+
     public init(primaryKey: String? = nil,
                 durability: ReqlDurability? = nil,
                 shards: Int? = nil,
@@ -17,7 +16,7 @@ public struct ReqlTableCreateOpts: ReqlOpts {
         self.replicas = replicas
         self.primaryReplicaTag = primaryReplicaTag
     }
-    
+
     public var rawValue: [String : Any] {
         var opts: [String: Any] = [:]
         if let primaryKey = self.primaryKey {
@@ -37,5 +36,4 @@ public struct ReqlTableCreateOpts: ReqlOpts {
         }
         return opts
     }
-    
 }

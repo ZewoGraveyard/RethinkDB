@@ -1,14 +1,13 @@
-public struct ReqlDeleteOpts: ReqlOpts {
-    
+public struct ReqlDeleteOpts : ReqlOpts {
     public let durability: ReqlDurability?
     public let returnChanges: Any?
-    
+
     public init(durability: ReqlDurability? = nil,
                 returnChanges: Any? = nil) {
         self.durability = durability
         self.returnChanges = returnChanges
     }
-    
+
     public var rawValue: [String : Any] {
         var opts: [String: Any] = [:]
         if let durability = self.durability {
@@ -19,5 +18,4 @@ public struct ReqlDeleteOpts: ReqlOpts {
         }
         return opts
     }
-    
 }

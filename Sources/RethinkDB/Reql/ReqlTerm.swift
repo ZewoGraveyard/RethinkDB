@@ -1,5 +1,4 @@
-enum ReqlTerm: Int, CustomStringConvertible {
-    
+enum ReqlTerm : Int, CustomStringConvertible {
     case datum = 1
     case makeArray = 2
     case makeObj = 3
@@ -178,7 +177,7 @@ enum ReqlTerm: Int, CustomStringConvertible {
     case polygonSub = 171
     case minval = 180
     case maxval = 181
-    
+
     var description: String {
         switch self {
         case .datum: return "datum"
@@ -361,5 +360,4 @@ enum ReqlTerm: Int, CustomStringConvertible {
         case .maxval: return "maxval"
         }
     }
-    
 }

@@ -1,10 +1,9 @@
-public struct ReqlCircleOpts: ReqlOpts {
-    
+public struct ReqlCircleOpts : ReqlOpts {
     public let numVertices: Any?
     public let geoSystem: ReqlGeoSystem?
     public let unit: ReqlUnit?
     public let fill: Bool?
-    
+
     public init(numVertices: Any? = nil,
                 geoSystem: ReqlGeoSystem? = nil,
                 unit: ReqlUnit? = nil,
@@ -14,7 +13,7 @@ public struct ReqlCircleOpts: ReqlOpts {
         self.unit = unit
         self.fill = fill
     }
-    
+
     public var rawValue: [String: Any] {
         var opts: [String: Any] = [:]
         if let numVertices = self.numVertices {
@@ -31,5 +30,4 @@ public struct ReqlCircleOpts: ReqlOpts {
         }
         return opts
     }
-    
 }

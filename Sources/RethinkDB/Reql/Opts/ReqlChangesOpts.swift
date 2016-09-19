@@ -1,9 +1,8 @@
-public struct ReqlChangesOpts: ReqlOpts {
-    
+public struct ReqlChangesOpts : ReqlOpts {
     public let squash: Bool?
     public let includeStates: Bool?
     public let includeInitial: Bool?
-    
+
     public init(squash: Bool? = nil,
                 includeStates: Bool? = nil,
                 includeInitial: Bool? = nil) {
@@ -11,7 +10,7 @@ public struct ReqlChangesOpts: ReqlOpts {
         self.includeStates = includeStates
         self.includeInitial = includeInitial
     }
-    
+
     public var rawValue: [String: Any] {
         var opts: [String: Any] = [:]
         if let squash = self.squash {
@@ -25,5 +24,4 @@ public struct ReqlChangesOpts: ReqlOpts {
         }
         return opts
     }
-    
 }

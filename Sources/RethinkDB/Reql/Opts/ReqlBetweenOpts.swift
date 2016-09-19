@@ -1,9 +1,8 @@
-public struct ReqlBetweenOpts: ReqlOpts {
-    
+public struct ReqlBetweenOpts : ReqlOpts {
     public let index: String?
     public let leftBound: ReqlBound?
     public let rightBound: ReqlBound?
-    
+
     public init(index: String? = nil,
                 leftBound: ReqlBound? = nil,
                 rightBound: ReqlBound? = nil) {
@@ -11,7 +10,7 @@ public struct ReqlBetweenOpts: ReqlOpts {
         self.leftBound = leftBound
         self.rightBound = rightBound
     }
-    
+
     public var rawValue: [String : Any] {
         var opts: [String: Any] = [:]
         if let index = self.index {
@@ -25,5 +24,4 @@ public struct ReqlBetweenOpts: ReqlOpts {
         }
         return opts
     }
-    
 }

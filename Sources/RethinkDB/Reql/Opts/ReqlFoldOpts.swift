@@ -1,14 +1,13 @@
-public struct ReqlFoldOpts: ReqlOpts {
-    
+public struct ReqlFoldOpts : ReqlOpts {
     public let emit: ReqlFunction3?
     public let finalEmit: ReqlFunction1?
-    
+
     public init(emit: ReqlFunction3? = nil,
                 finalEmit: ReqlFunction1? = nil) {
         self.emit = emit
         self.finalEmit = finalEmit
     }
-    
+
     public var rawValue: [String : Any] {
         var opts: [String: Any] = [:]
         if let emit = self.emit {
@@ -19,5 +18,4 @@ public struct ReqlFoldOpts: ReqlOpts {
         }
         return opts
     }
-    
 }

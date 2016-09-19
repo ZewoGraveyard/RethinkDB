@@ -1,10 +1,9 @@
 public struct ReqlConfig {
-    
     let connect: (() throws -> Transport)
     let db: String
     let username: String
     let password: String
-    
+
     init(connect: @escaping (() throws -> Transport),
          db: String = "test",
          username: String = "admin",
@@ -14,5 +13,4 @@ public struct ReqlConfig {
         self.username = username
         self.password = password
     }
-    
 }

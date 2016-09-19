@@ -1,5 +1,5 @@
 import XCTest
-@testable import RethinkDBTests
+import RethinkDBTests
 
 XCTMain([
      testCase(ConnectionTests.allTests),

@@ -1,14 +1,13 @@
-public struct ReqlGroupOpts: ReqlOpts {
-    
+public struct ReqlGroupOpts : ReqlOpts {
     public let index: String?
     public let multi: Bool?
-    
+
     public init(index: String? = nil,
                 multi: Bool? = nil) {
         self.index = index
         self.multi = multi
     }
-    
+
     public var rawValue: [String: Any] {
         var opts: [String: Any] = [:]
         if let index = self.index {
@@ -19,5 +18,4 @@ public struct ReqlGroupOpts: ReqlOpts {
         }
         return opts
     }
-    
 }

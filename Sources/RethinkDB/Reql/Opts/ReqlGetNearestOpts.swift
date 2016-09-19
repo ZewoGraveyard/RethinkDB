@@ -1,11 +1,10 @@
-public struct ReqlGetNearest: ReqlOpts {
-    
+public struct ReqlGetNearest : ReqlOpts {
     public let index: String?
     public let maxResults: Int?
     public let unit: ReqlUnit?
     public let maxDistance: Double?
     public let geoSystem: ReqlGeoSystem?
-    
+
     public init(index: String? = nil,
                 maxResults: Int? = nil,
                 unit: ReqlUnit? = nil,
@@ -17,7 +16,7 @@ public struct ReqlGetNearest: ReqlOpts {
         self.maxDistance = maxDistance
         self.geoSystem = geoSystem
     }
-    
+
     public var rawValue: [String: Any] {
         var opts: [String: Any] = [:]
         if let index = self.index {
@@ -37,5 +36,4 @@ public struct ReqlGetNearest: ReqlOpts {
         }
         return opts
     }
-    
 }

@@ -1,6 +1,4 @@
-public enum ReqlFormat: String {
-    
+public enum ReqlFormat : String {
     case raw = "raw"
     case native = "native"
-    
 }

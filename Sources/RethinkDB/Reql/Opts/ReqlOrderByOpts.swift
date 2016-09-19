@@ -1,11 +1,10 @@
-public struct ReqlOrderByOpts: ReqlOpts {
-    
+public struct ReqlOrderByOpts : ReqlOpts {
     public let index: Any?
-    
+
     public init(index: Any? = nil) {
         self.index = index
     }
-    
+
     public var rawValue: [String : Any] {
         var opts: [String: Any] = [:]
         if let index = self.index {
@@ -13,5 +12,4 @@ public struct ReqlOrderByOpts: ReqlOpts {
         }
         return opts
     }
-    
 }

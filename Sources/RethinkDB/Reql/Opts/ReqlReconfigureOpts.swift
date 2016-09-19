@@ -1,12 +1,11 @@
-public struct ReqlReconfigureOpts: ReqlOpts {
-    
+public struct ReqlReconfigureOpts : ReqlOpts {
     public let shards: Int?
     public let replicas: Any?
     public let primaryReplicaTag: String?
     public let dryRun: Bool?
     public let nonVotingReplicaTags: Any?
     public let emergencyRepair: ReqlEmergencyRepair?
-    
+
     public init(shards: Int? = nil,
                 replicas: Any? = nil,
                 primaryReplicaTag: String? = nil,
@@ -20,7 +19,7 @@ public struct ReqlReconfigureOpts: ReqlOpts {
         self.nonVotingReplicaTags = nonVotingReplicaTags
         self.emergencyRepair = emergencyRepair
     }
-    
+
     public var rawValue: [String: Any] {
         var opts: [String: Any] = [:]
         if let shards = self.shards {
@@ -43,5 +42,4 @@ public struct ReqlReconfigureOpts: ReqlOpts {
         }
         return opts
     }
-    
 }

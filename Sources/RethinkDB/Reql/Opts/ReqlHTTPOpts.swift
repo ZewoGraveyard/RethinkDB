@@ -1,6 +1,5 @@
 public typealias ReqlHTTPAuth = (type: ReqlAuthType, user: String, pass: String)
-public struct ReqlHTTPOpts: ReqlOpts {
-    
+public struct ReqlHTTPOpts : ReqlOpts {
     public let timeout: Int?
     public let reattempts: Int?
     public let redirects: Int?
@@ -11,7 +10,7 @@ public struct ReqlHTTPOpts: ReqlOpts {
     public let params: [String: Any]?
     public let headers: Any?
     public let data: Any?
-    
+
     public init(timeout: Int? = nil,
                 reattempts: Int? = nil,
                 redirects: Int? = nil,
@@ -33,7 +32,7 @@ public struct ReqlHTTPOpts: ReqlOpts {
         self.headers = headers
         self.data = data
     }
-    
+
     public var rawValue: [String : Any] {
         var opts: [String: Any] = [:]
         if let timeout = self.timeout {
@@ -68,5 +67,4 @@ public struct ReqlHTTPOpts: ReqlOpts {
         }
         return opts
     }
-    
 }

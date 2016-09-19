@@ -1,8 +1,6 @@
 import Foundation
 
-
-public struct Error: Swift.Error, CustomStringConvertible, CustomDebugStringConvertible {
-    
+public struct Error : Swift.Error, CustomStringConvertible, CustomDebugStringConvertible {
     public enum Code {
         case connection
         case encoding
@@ -13,23 +11,22 @@ public struct Error: Swift.Error, CustomStringConvertible, CustomDebugStringConv
         case reql(backtrace: String?)
         case generic
     }
-    
+
     public let code: Code
     public let reason: String
     public let underlyingError: Swift.Error?
-    
+
     internal init(code: Code, reason: String, underlyingError: Swift.Error? = nil) {
         self.code = code
         self.reason = reason
         self.underlyingError = underlyingError
     }
-    
+
     public var description: String {
         return ""
     }
-    
+
     public var debugDescription: String {
         return ""
     }
-    
 }
