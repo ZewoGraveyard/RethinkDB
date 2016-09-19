@@ -1,5 +1,6 @@
 import Foundation
+import Core
 
 protocol ConnectionQueryable {
-    func run(ast: ReqlAst) throws -> JSON
+    func run(ast: ReqlAst) throws -> Map
 }

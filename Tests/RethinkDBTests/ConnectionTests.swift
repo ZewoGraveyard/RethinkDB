@@ -1,4 +1,5 @@
 import XCTest
+@testable import TCP
 @testable import RethinkDB
 
 extension Socket : Transport {

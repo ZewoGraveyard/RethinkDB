@@ -1,4 +1,6 @@
 import Foundation
+import Core
+
 
 class ConnectionWriteBuffer {
     private let transport: Transport
@@ -26,8 +28,8 @@ extension ConnectionWriteBuffer {
         return try self.write(value: data)
     }
 
-    func write(value: JSON) throws {
-        try self.write(bytes: [UInt8](try JSON.Serializer.serialize(value).utf8))
+    func write(value: Map) throws {
+        try self.write(value: try JSONMapSerializer().serialize(value))
     }
 
     func write(value: Int8) throws {
@@ -128,14 +130,15 @@ class ConnectionReadBuffer {
         return try self.drain(length: offset + 1)
     }
 
-    func readToNullTerminatedJSON(maxLength: Int) throws -> JSON {
+    func readToNullTerminatedJSON(maxLength: Int) throws -> Map {
         let data = try self.readToNullTerminator(maxLength: maxLength)
         guard data.count > 1 else {
             throw Error(code: .decoding, reason: "Empty JSON.", underlyingError: nil)
         }
 
         do {
-            return try JSON.Parser.parse([UInt8](data[0..<(data.count - 1)]))
+            // try JSON.Parser.parse([UInt8](data[0..<(data.count - 1)]))
+            fatalError("TODO")
         } catch {
             throw Error(code: .decoding, reason: "Failed to parse JSON.", underlyingError: error)
         }
@@ -177,8 +180,8 @@ extension ConnectionReadBuffer {
         return string
     }
 
-    func read(length: Int) throws -> JSON {
-        return try JSON.Parser.parse(self.read(length: length))
+    func read(length: Int) throws -> Map {
+        return try JSONMapParser().parse(self.read(length: length))
     }
 
     func read() throws -> Int8 {

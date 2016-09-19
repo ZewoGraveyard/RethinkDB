@@ -1,4 +1,7 @@
 import Foundation
+import Core
+import TCP
+import Venice
 
 class ConnectionPool : ConnectionQueryable {
     let config: ReqlConfig
@@ -12,11 +15,14 @@ class ConnectionPool : ConnectionQueryable {
         self.semaphore = DispatchSemaphore(value: maxConnections)
     }
 
-    func run(ast: ReqlAst) throws -> JSON {
+    func run(ast: ReqlAst) throws -> Map {
         return try self.withConnection { try $0.run(ast: ast) }
     }
 
     private func withConnection<T>(handler: (Connection) throws -> T) throws -> T {
+        
+        nap(for: .infinity)
+        
         // wait on the semaphore
         let waitTime = DispatchTime(uptimeNanoseconds: DispatchTime.now().uptimeNanoseconds + UInt64(NSEC_PER_SEC * 60))
         guard case .success = self.semaphore.wait(timeout: waitTime) else {

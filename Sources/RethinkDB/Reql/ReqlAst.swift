@@ -1,4 +1,6 @@
 import Foundation
+import Core
+
 
 public class ReqlAst {
     fileprivate let term: ReqlTerm
@@ -94,7 +96,7 @@ extension ReqlAst : ReqlArg {
 }
 
 extension ReqlAst {
-    public func run() throws -> JSON {
+    public func run() throws -> Map {
         let pool = ReqlTopLevel.connectionPool
         return try pool.run(ast: self)
     }

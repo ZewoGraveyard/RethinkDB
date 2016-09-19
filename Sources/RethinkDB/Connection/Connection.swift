@@ -1,4 +1,6 @@
 import Foundation
+import Core
+
 
 class Connection {
     fileprivate var queryToken: Int64 = 82
@@ -19,7 +21,8 @@ class Connection {
 }
 
 extension Connection : ConnectionQueryable {
-    func run(ast: ReqlAst) throws -> JSON {
+    
+    func run(ast: ReqlAst) throws -> Map {
         // get token
         let token = self.queryToken
         self.queryToken += 1
@@ -29,17 +32,15 @@ extension Connection : ConnectionQueryable {
 
         // read response
         var finished: Bool = false
-        var results: [JSON] = []
+        var results: [Map] = []
         while !finished {
             let response = try self.readResponse(token: token)
-
-
-
-            guard let responseType = ReqlProtocol.ResponseType(rawValue: response["t"]?.int ?? -1) else {
+            
+            guard let responseType = ReqlProtocol.ResponseType(rawValue: response["t"].int ?? -1) else {
                 throw Error(code: .decoding, reason: "Missing or invalid response type.")
             }
 
-            guard let responseResults = response["r"]?.array else {
+            guard let responseResults = response["r"].array else {
                 throw Error(code: .decoding, reason: "Missing or invalid response results.")
             }
 
@@ -57,7 +58,7 @@ extension Connection : ConnectionQueryable {
 
             case .clientError, .compileError, .runtimeError:
                 let reason = responseResults.first?.string ?? "Unknown Error"
-                let backtrace = response["b"]?.string ?? "No Backtrace"
+                let backtrace = response["b"].string ?? "No Backtrace"
                 let type: String
                 switch responseType {
                 case .clientError:
@@ -74,9 +75,9 @@ extension Connection : ConnectionQueryable {
         }
 
         guard results.count > 1 else {
-            return results.first ?? JSON.null
+            return results.first ?? Map.null
         }
-        return JSON.array(results)
+        return Map.array(results)
     }
 
     private func writeQuery(token: Int64, type: ReqlProtocol.QueryType, query: ReqlAst? = nil, opts: [String: Any]? = nil) throws {
@@ -112,7 +113,7 @@ extension Connection : ConnectionQueryable {
 
     }
 
-    private func readResponse(token: Int64) throws -> JSON {
+    private func readResponse(token: Int64) throws -> Map {
         guard try self.readBuffer.read() == token else {
             throw Error(code: .decoding, reason: "Received out of order response.")
         }
@@ -133,41 +134,41 @@ extension Connection {
             try connection.writeBuffer.write(value: ReqlProtocol.version)
 
             // write auth challenge request
-            try connection.writeBuffer.write(value: try [
+            try connection.writeBuffer.write(value: [
                 "protocol_version": 0,
                 "authentication_method": authenticator.method,
                 "authentication": authenticator.clientFirstMessage()
-            ].encoded().serialized())
+            ].asMap())
             try connection.writeBuffer.write(bytes: [0])
 
             // read handeshake response
             let handshakeResponse = try connection.readBuffer.readToNullTerminatedJSON(maxLength: 16384)
-            guard handshakeResponse["success"]?.bool == true else {
-                let reason = handshakeResponse["error"]?.string ?? "Server rejected handshake."
+            guard handshakeResponse["success"].bool == true else {
+                let reason = handshakeResponse["error"].string ?? "Server rejected handshake."
                 throw Error(code: .handshake, reason: reason)
             }
 
 
             // read auth challenge request response
             let authChallengeRequestResponse = try connection.readBuffer.readToNullTerminatedJSON(maxLength: 16384)
-            guard let authChallenge = authChallengeRequestResponse["authentication"]?.string,
-                  authChallengeRequestResponse["success"]?.bool == true else {
-                let reason = authChallengeRequestResponse["error"]?.string ?? "Server rejected auth challenge."
+            guard let authChallenge = authChallengeRequestResponse["authentication"].string,
+                  authChallengeRequestResponse["success"].bool == true else {
+                let reason = authChallengeRequestResponse["error"].string ?? "Server rejected auth challenge."
                 throw Error(code: .authentication, reason: reason)
             }
 
             // write auth challenge response
-            try connection.writeBuffer.write(value: try [
+            try connection.writeBuffer.write(value: [
                 "authentication": try authenticator.clientFinalMessage(response: authChallenge)
-            ].encoded().serialized())
+            ].asMap())
             try connection.writeBuffer.write(bytes: [0])
 
             // read auth response
             let authResponse = try connection.readBuffer.readToNullTerminatedJSON(maxLength: 16384)
-            guard let authProof = authResponse["authentication"]?.string,
+            guard let authProof = authResponse["authentication"].string,
                   try authenticator.verifyServerFinalMessage(response: authProof),
-                  authResponse["success"]?.bool == true else {
-                let reason = authResponse["error"]?.string ?? "Server rejected auth."
+                  authResponse["success"].bool == true else {
+                let reason = authResponse["error"].string ?? "Server rejected auth."
                 throw Error(code: .authentication, reason: reason)
             }
 
