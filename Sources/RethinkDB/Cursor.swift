@@ -111,6 +111,7 @@ public class Cursor {
         
         // if we're finished just return nil we have nothing else
         guard !self.finished else {
+            self.responseChannel.close()
             return nil
         }
         
@@ -152,7 +153,11 @@ public class Cursor {
     }
     
     public func close() {
+        guard !self.finished else {
+            return
+        }
         self.finished = true
+        self.queryChannel.send(Query(token: self.token, type: .stop, buffer: nil))
         self.responseChannel.close()
     }
     

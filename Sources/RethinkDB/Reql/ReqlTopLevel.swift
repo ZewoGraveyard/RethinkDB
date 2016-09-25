@@ -12,13 +12,13 @@ public class ReqlTopLevel : ReqlAst {
         self.config = config
     }
     
-    fileprivate static var config: ReqlConfig = ReqlConfig() {
+    internal static var config: ReqlConfig = ReqlConfig() {
         didSet {
             self.connection = Connection(config: self.config)
         }
     }
     
-    fileprivate static var connection = Connection(config: ReqlConfig()) {
+    internal static var connection = Connection(config: ReqlConfig()) {
         didSet {
             oldValue.close()
         }
