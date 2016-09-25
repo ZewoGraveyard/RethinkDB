@@ -1,7 +1,6 @@
 import Foundation
 import Core
 
-
 public class ReqlAst {
     fileprivate let term: ReqlTerm
     fileprivate let args: [Any]

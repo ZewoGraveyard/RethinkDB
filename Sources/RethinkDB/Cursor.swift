@@ -5,56 +5,99 @@ import Venice
 public class Cursor {
     
     internal struct Query {
+        let token: Int64
         let type: ReqlProtocol.QueryType
-        let data: Data?
+        let buffer: Buffer?
     }
     
-    internal struct Response {
-        let type: ReqlProtocol.ResponseType
-        let map: Map
+    internal enum Response {
+        
+        case success(token: Int64, results: [Map], done: Bool)
+        case failure(token: Int64, error: Error)
+        
+        var token: Int64 {
+            switch self {
+            case .success(let token, _, _):
+                return token
+            case .failure(let token, _):
+                return token
+            }
+        }
         
         var results: [Map]? {
-            switch self.type {
-            case .successAtom, .successPartial, .successSequence:
-                return self.map["r"].array
-            default:
+            switch self {
+            case .success(_, let results, _):
+                return results
+            case .failure:
                 return nil
             }
         }
         
         var error: Error? {
-            switch self.type {
-            case .clientError:
-                let backtrace = self.map["b"].string ?? "No Backtrace"
-                let reason = self.map["r"].array?.first?.string ?? "No Reason"
-                return Error(code: .query(type: "Client", backtrace: backtrace), reason: reason)
-            case .compileError:
-                let backtrace = self.map["b"].string ?? "No Backtrace"
-                let reason = self.map["r"].array?.first?.string ?? "No Reason"
-                return Error(code: .query(type: "Compile", backtrace: backtrace), reason: reason)
-            case .runtimeError:
-                let backtrace = self.map["b"].string ?? "No Backtrace"
-                let reason = self.map["r"].array?.first?.string ?? "No Reason"
-                return Error(code: .query(type: "Runtime", backtrace: backtrace), reason: reason)
-            default:
+            switch self {
+            case .success:
                 return nil
+            case .failure(_, let error):
+                return error
             }
         }
         
         var final: Bool {
-            return self.type.final
+            switch self {
+            case .success(_, _, let done):
+                return done
+            case .failure:
+                return true
+            }
+        }
+        
+        init(token: Int64, map: Map) throws {
+            guard let type = ReqlProtocol.ResponseType(rawValue: map["t"].int ?? -1) else {
+                throw Error(code: .decoding, reason: "Could not decode response.")
+            }
+            
+            let results = map["r"].array
+            
+            switch type {
+            case .successAtom, .successPartial, .successSequence, .waitComplete, .serverInfo:
+                guard results != nil  else {
+                    throw Error(code: .decoding, reason: "Could not decode response.")
+                }
+                self = .success(token: token, results: results!, done: type.final)
+            case .clientError:
+                let backtrace = map["b"].string ?? "No Backtrace"
+                let reason = results?.first?.string ?? "No Reason"
+                let error = Error(code: .query(type: "Client Error", backtrace: backtrace), reason: reason)
+                self = .failure(token: token, error: error)
+            case .compileError:
+                let backtrace = map["b"].string ?? "No Backtrace"
+                let reason = results?.first?.string ?? "No Reason"
+                let error = Error(code: .query(type: "Client Error", backtrace: backtrace), reason: reason)
+                self = .failure(token: token, error: error)
+            case .runtimeError:
+                let backtrace = map["b"].string ?? "No Backtrace"
+                let reason = results?.first?.string ?? "No Reason"
+                let error = Error(code: .query(type: "Client Error", backtrace: backtrace), reason: reason)
+                self = .failure(token: token, error: error)
+            }
         }
     }
     
-    private let sender: FallibleSendingChannel<Query>
-    private let receiver: FallibleReceivingChannel<Response>
+    internal let token: Int64
     
+    private let queryChannel: SendingChannel<Query>
+    private let responseChannel: FallibleReceivingChannel<Response>
+    
+    private var needsContinue: Bool = false
     private var finished: Bool = false
     private var remainingResults: [Map] = []
     
-    internal init(sender: FallibleSendingChannel<Query>, receiver: FallibleReceivingChannel<Response>) {
-        self.sender = sender
-        self.receiver = receiver
+    internal init(token: Int64,
+                  queryChannel: SendingChannel<Query>,
+                  responseChannel: FallibleReceivingChannel<Response>) {
+        self.token = token
+        self.queryChannel = queryChannel
+        self.responseChannel = responseChannel
     }
     deinit {
         self.close()
@@ -72,13 +115,15 @@ public class Cursor {
         }
         
         // send a new request to the server
-        guard !self.sender.closed else {
-            throw Error(code: .connection, reason: "Unexpected end of query.")
+        if self.needsContinue {
+            guard !self.queryChannel.closed else {
+                throw Error(code: .connection, reason: "Unexpected end of query.")
+            }
+            self.queryChannel.send(Query(token: self.token, type: .`continue`, buffer: nil))
         }
-        self.sender.send(Query(type: .`continue`, data: nil))
         
         // receive a new response from server
-        guard let response = try self.receiver.receive() else {
+        guard let response = try self.responseChannel.receive() else {
             throw Error(code: .connection, reason: "Unexpected end of query.")
         }
         
@@ -90,6 +135,7 @@ public class Cursor {
         }
         
         // check for results
+        self.needsContinue = !response.final
         self.finished = response.final
         self.remainingResults += (response.results ?? [])
         
@@ -107,7 +153,7 @@ public class Cursor {
     
     public func close() {
         self.finished = true
-        self.receiver.close()
+        self.responseChannel.close()
     }
     
 }
