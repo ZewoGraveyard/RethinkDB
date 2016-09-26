@@ -25,10 +25,10 @@ public struct Error : Swift.Error, CustomStringConvertible, CustomDebugStringCon
     }
 
     public var description: String {
-        return ""
+        return self.reason
     }
 
     public var debugDescription: String {
-        return ""
+        return "[RethinkDB.Error] \(self.reason)"
     }
 }
