@@ -18,11 +18,24 @@ public class ReqlTopLevel : ReqlAst {
         }
     }
     
-    internal static var connection = Connection(config: ReqlConfig()) {
-        didSet {
-            oldValue.close()
+    internal static var connection: Connection {
+        get {
+            let connection: Connection
+            if let existing = self.connectionStorage {
+                connection = existing
+            } else {
+                connection = Connection(config: self.config)
+                connectionStorage = connection
+            }
+            return connection
+        }
+        set {
+            connectionStorage?.close()
+            connectionStorage = newValue
         }
     }
+    
+    private static var connectionStorage: Connection? = nil
     
 }
 
