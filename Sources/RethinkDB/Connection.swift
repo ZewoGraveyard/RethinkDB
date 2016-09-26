@@ -35,12 +35,9 @@ class Connection {
     }
     
     func run(_ ast: ReqlAst) throws -> Cursor {
-        defer {
-            self.nextToken += 1
-        }
-        
         // get next token
         let token = self.nextToken
+        self.nextToken += 1
         
         // compile the reql and convert to buffer
         let buffer = Buffer(try ast.reqlJSON())
