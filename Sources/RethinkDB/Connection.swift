@@ -34,7 +34,7 @@ class Connection {
         self.queryChannel.close()
     }
     
-    func run(_ ast: ReqlAst) throws -> Cursor {
+    func run(ast: ReqlAst, opts: ReqlGlobalOpts?) throws -> Cursor {
         // get next token
         let token = self.nextToken
         self.nextToken += 1
@@ -43,7 +43,7 @@ class Connection {
         let buffer = Buffer(try ast.reqlJSON())
         
         // create the query
-        let query = Cursor.Query(token: token, type: .start, buffer: buffer)
+        let query = Cursor.Query.start(token: token, buffer: buffer, opts: opts)
         
         // create a response channel
         let responseChannel: FallibleChannel<Cursor.Response> = FallibleChannel<Cursor.Response>()

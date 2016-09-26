@@ -164,20 +164,30 @@ extension ConnectionStream {
 extension ConnectionStream {
 
     func write(_ from: Cursor.Query, deadline: Double = 1.minute.fromNow()) throws {
-        try self.write(from.token, deadline: deadline)
-        
-        var payload = Buffer()
-        
-        if let buffer = from.buffer {
-            payload.append(Buffer("[\(from.type.rawValue),"))
+        switch from {
+        case .start(let token, let buffer, let opts):
+            try self.write(token, deadline: deadline)
+            
+            var payload = Buffer()
+            payload.append(Buffer("[\(ReqlProtocol.QueryType.start.rawValue),"))
             payload.append(buffer)
-            payload.append(Buffer(",{}]"))
-        } else {
-            payload.append(Buffer("[\(from.type.rawValue),{}]"))
+            if let opts = opts {
+                payload.append(Buffer(",\(try opts.rawValue.reqlJSON())]"))
+            } else {
+                payload.append(Buffer(",{}]"))
+            }
+            
+            try self.write(Int32(payload.count), deadline: deadline)
+            try self.write(payload, deadline: deadline)
+
+        case .continuation(let token, let type):
+            try self.write(token)
+            
+            let payload = Buffer("[\(type.rawValue)]")
+            
+            try self.write(Int32(payload.count), deadline: deadline)
+            try self.write(payload, deadline: deadline)
         }
-        
-        try self.write(Int32(payload.count), deadline: deadline)
-        try self.write(payload, deadline: deadline)
     }
     
     func write(_ from: Map, deadline: Double = 1.minute.fromNow()) throws {

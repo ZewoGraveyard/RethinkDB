@@ -4,10 +4,9 @@ import Venice
 
 public class Cursor {
     
-    internal struct Query {
-        let token: Int64
-        let type: ReqlProtocol.QueryType
-        let buffer: Buffer?
+    internal enum Query {
+        case start(token: Int64, buffer: Buffer, opts: ReqlGlobalOpts?)
+        case continuation(token: Int64, type: ReqlProtocol.QueryType)
     }
     
     internal enum Response {
@@ -120,7 +119,7 @@ public class Cursor {
             guard !self.queryChannel.closed else {
                 throw Error(code: .connection, reason: "Unexpected end of query.")
             }
-            self.queryChannel.send(Query(token: self.token, type: .`continue`, buffer: nil))
+            self.queryChannel.send(.continuation(token: self.token, type: .`continue`))
         }
         
         // receive a new response from server
@@ -144,6 +143,44 @@ public class Cursor {
         return try self.next()
     }
     
+    public func batches(_ batch: ([Map]) throws -> Void) throws {
+        while !self.finished {
+            // send a new request to the server
+            if self.needsContinue {
+                guard !self.queryChannel.closed else {
+                    throw Error(code: .connection, reason: "Unexpected end of query.")
+                }
+                self.queryChannel.send(.continuation(token: self.token, type: .`continue`))
+            }
+            
+            // receive a new response from server
+            guard let response = try self.responseChannel.receive() else {
+                throw Error(code: .connection, reason: "Unexpected end of query.")
+            }
+            
+            // check for error
+            let error = response.error
+            guard error == nil else {
+                self.finished = true
+                throw error!
+            }
+            
+            // check for results
+            self.needsContinue = !response.final
+            self.finished = response.final
+            self.remainingResults += (response.results ?? [])
+            
+            // send batch
+            if !self.remainingResults.isEmpty {
+                try batch(self.remainingResults)
+                self.remainingResults = []
+            }
+        }
+        
+        // close channel
+        self.responseChannel.close()
+    }
+    
     public func all() throws -> [Map] {
         var all: [Map] = []
         while let n = try self.next() {
@@ -157,7 +194,7 @@ public class Cursor {
             return
         }
         self.finished = true
-        self.queryChannel.send(Query(token: self.token, type: .stop, buffer: nil))
+        self.queryChannel.send(.continuation(token: self.token, type: .stop))
         self.responseChannel.close()
     }
     

@@ -44,6 +44,7 @@ public class ReqlAst {
 }
 
 extension ReqlAst : ReqlArg {
+    
     public func reqlJSON() throws -> String {
         guard self.cachedReqlJSON == nil else {
             return self.cachedReqlJSON!
@@ -54,7 +55,7 @@ extension ReqlAst : ReqlArg {
             cachedReqlJSON += "["
             cachedReqlJSON += try self.term.rawValue.reqlJSON()
             cachedReqlJSON += ",["
-
+            
             for (idx, arg) in self.args.enumerated() {
                 if let arg = arg as? ReqlArg {
                     cachedReqlJSON += try arg.reqlJSON()
@@ -63,31 +64,32 @@ extension ReqlAst : ReqlArg {
                 } else {
                     throw Error(code: .reql(backtrace: nil), reason: "Invalid argument type. Got '\(arg.self)'.")
                 }
-
+                
                 if idx + 1 < self.args.count {
                     cachedReqlJSON += ","
                 }
             }
             
             cachedReqlJSON += "]"
-
+            
             if self.opts.count > 0 {
                 cachedReqlJSON += ","
                 cachedReqlJSON += try opts.reqlJSON()
             }
-
+            
             cachedReqlJSON += "]"
         } catch let error as Error {
             guard case .reql(let backtrace) = error.code else {
                 throw error
             }
-
+            
             var parts: [String?] = [backtrace]
             parts.insert("\(self.sourceLocation.file)#\(self.sourceLocation.line)", at: 0)
             parts = parts.filter { $0 != nil}
-
+            
             throw Error(code: .reql(backtrace: parts.map { $0! } .joined(separator: "\n")), reason: "Could not compile reql.")
         }
+        
 
         self.cachedReqlJSON = cachedReqlJSON
         return cachedReqlJSON

@@ -43,8 +43,8 @@ public typealias r = ReqlTopLevel
 
 extension ReqlAst {
     
-    public func run() throws -> Cursor {
-        return try r.connection.run(self)
+    public func run(_ opts: ReqlGlobalOpts? = nil) throws -> Cursor {
+        return try r.connection.run(ast: self, opts: opts)
     }
     
 }
