@@ -31,7 +31,9 @@ class ConnectionAuthenticator {
         }
 
         let passwordBuffer = Buffer(self.password)
-        let saltBuffer = saltData.withUnsafeBytes { Buffer(bytes: UnsafeBufferPointer<UInt8>(start: $0, count: saltData.count)) }
+        let saltBuffer = Buffer(count: saltData.count) {
+            saltData.copyBytes(to: $0.baseAddress!, count: saltData.count)
+        }
 
         let passwordKeyBuffer: Buffer
         if iterations > 1 || !passwordBuffer.isEmpty {

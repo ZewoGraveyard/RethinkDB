@@ -39,11 +39,11 @@ class Connection {
         let token = self.nextToken
         self.nextToken += 1
         
-        // compile the reql and convert to buffer
-        let buffer = Buffer(try ast.reqlJSON())
+        // compile the reql and convert to map
+        let args = try ast.asMap()
         
         // create the query
-        let query = Cursor.Query.start(token: token, buffer: buffer, opts: opts)
+        let query = try Cursor.Query.start(token: token, args: args, opts: opts?.asMap())
         
         // create a response channel
         let responseChannel: FallibleChannel<Cursor.Response> = FallibleChannel<Cursor.Response>()
