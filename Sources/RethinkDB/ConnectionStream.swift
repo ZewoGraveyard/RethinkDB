@@ -187,8 +187,8 @@ extension ConnectionStream {
     
     func read(deadline: Double = 1.minute.fromNow()) throws -> Int32 {
         let size = MemoryLayout<Int32>.size
-        let buffer: Buffer = try read(upTo: size, deadline: deadline)
-        return buffer.withUnsafeBytes { (ptr: UnsafePointer<Int32>) -> Int32 in
+        let bytes: Buffer = try read(exactly: size, deadline: deadline)
+        return bytes.withUnsafeBytes { (ptr: UnsafePointer<Int32>) -> Int32 in
             return ptr.pointee
         }
     }
@@ -196,8 +196,8 @@ extension ConnectionStream {
     
     func read(deadline: Double = 1.minute.fromNow()) throws -> Int64 {
         let size = MemoryLayout<Int64>.size
-        let buffer: Buffer = try read(upTo: size, deadline: deadline)
-        return buffer.withUnsafeBytes { (ptr: UnsafePointer<Int64>) -> Int64 in
+        let bytes: Buffer = try read(exactly: size, deadline: deadline)
+        return bytes.withUnsafeBytes { (ptr: UnsafePointer<Int64>) -> Int64 in
             return ptr.pointee
         }
     }
