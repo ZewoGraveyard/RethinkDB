@@ -1,11 +1,11 @@
 import Foundation
 
-public typealias ReqlFunction0  = () -> ReqlArg
-public typealias ReqlFunction1  = (ReqlExpr) -> ReqlArg
-public typealias ReqlFunction2  = (ReqlExpr, ReqlExpr) -> ReqlArg
-public typealias ReqlFunction3  = (ReqlExpr, ReqlExpr, ReqlExpr) -> ReqlArg
-public typealias ReqlFunction4  = (ReqlExpr, ReqlExpr, ReqlExpr, ReqlExpr) -> ReqlArg
-public typealias ReqlFunction5  = (ReqlExpr, ReqlExpr, ReqlExpr, ReqlExpr, ReqlExpr) -> ReqlArg
+public typealias ReqlFunction0  = () -> Any
+public typealias ReqlFunction1  = (ReqlExpr) -> Any
+public typealias ReqlFunction2  = (ReqlExpr, ReqlExpr) -> Any
+public typealias ReqlFunction3  = (ReqlExpr, ReqlExpr, ReqlExpr) -> Any
+public typealias ReqlFunction4  = (ReqlExpr, ReqlExpr, ReqlExpr, ReqlExpr) -> Any
+public typealias ReqlFunction5  = (ReqlExpr, ReqlExpr, ReqlExpr, ReqlExpr, ReqlExpr) -> Any
 
 internal class ReqlFunction: ReqlAst {
     convenience init?(_ f: Any, file: String = #file, line: Int = #line) {

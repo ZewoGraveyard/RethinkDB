@@ -57,7 +57,11 @@ extension ReqlAst : ReqlArg {
             var argsMap: [Map] = []
             for arg in args {
                 if let arg = arg as? MapFallibleRepresentable {
-                    try argsMap.append(arg.asMap())
+                    if arg is Array<Any> {
+                        try argsMap.append([ReqlTerm.makeArray.rawValue.asMap(), arg.asMap()].map)
+                    } else {
+                        try argsMap.append(arg.asMap())
+                    }
                 } else if let arg = ReqlFunction(arg) {
                     try argsMap.append(arg.asMap())
                 } else {
