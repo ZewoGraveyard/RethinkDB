@@ -1,6 +1,7 @@
 import Foundation
 import Axis
 import OpenSSL
+import COpenSSL
 
 
 class ConnectionAuthenticator {
@@ -104,13 +105,14 @@ class ConnectionAuthenticator {
     
 }
 
-fileprivate func pbkdf2(_ function: Function, password: BufferRepresentable, salt: BufferRepresentable, iterations: Int) throws -> Buffer {
-    initialize()
+// TODO: Remove this once OpenSSL upstream has PBKDF2
+fileprivate func pbkdf2(_ function: Hash.Function, password: BufferRepresentable, salt: BufferRepresentable, iterations: Int) throws -> Buffer {
+    OpenSSL.initialize()
     
     let passwordBuffer = password.buffer
     let saltBuffer = salt.buffer
     
-    return Buffer(count: Int(function.digestLength)) { bufferPtr in
+    return Buffer(count: Int(SHA256_DIGEST_LENGTH)) { bufferPtr in
         passwordBuffer.withUnsafeBytes { (passwordBufferPtr: UnsafePointer<Int8>) in
             saltBuffer.withUnsafeBytes { (saltBufferPtr: UnsafePointer<UInt8>) in
                 _ = COpenSSL.PKCS5_PBKDF2_HMAC(passwordBufferPtr,
@@ -118,7 +120,7 @@ fileprivate func pbkdf2(_ function: Function, password: BufferRepresentable, sal
                                                saltBufferPtr,
                                                Int32(saltBuffer.count),
                                                Int32(iterations),
-                                               function.evp,
+                                               EVP_sha256(),
                                                Int32(bufferPtr.count),
                                                bufferPtr.baseAddress)
             }
