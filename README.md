@@ -4,6 +4,7 @@
 [![License][mit-badge]][mit-url]
 [![Slack][slack-badge]][slack-url]
 [![Travis][travis-badge]][travis-url]
+[![Codecov][codecov-badge]][codecov-url]
 [![Codebeat][codebeat-badge]][codebeat-url]
 
 ## Installation
@@ -13,7 +14,7 @@ import PackageDescription
 
 let package = Package(
     dependencies: [
-        .Package(url: "https://github.com/Zewo/RethinkDB.git", majorVersion: 0),
+        .Package(url: "https://github.com/Zewo/RethinkDB.git", majorVersion: 0, minor: 14),
     ]
 )
 ```
@@ -41,5 +42,7 @@ This project is released under the MIT license. See [LICENSE](LICENSE) for detai
 [slack-url]: http://slack.zewo.io
 [travis-badge]: https://travis-ci.org/Zewo/RethinkDB.svg?branch=master
 [travis-url]: https://travis-ci.org/Zewo/RethinkDB
-[codebeat-badge]: https://codebeat.co/badges/45712aa0-d540-4b15-b82c-ed594f1fc5a6
+[codecov-badge]: https://codecov.io/gh/Zewo/RethinkDB/branch/master/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/Zewo/RethinkDB
+[codebeat-badge]: https://codebeat.co/badges/110ce793-c785-4667-9abe-5db81d2c7829
 [codebeat-url]: https://codebeat.co/projects/github-com-zewo-rethinkdb
