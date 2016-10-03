@@ -1,4 +1,4 @@
-import Core
+import Axis
 
 public protocol ReqlOpts : MapFallibleRepresentable {
     var rawValue: [String: Any] { get }

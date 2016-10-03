@@ -1,5 +1,5 @@
 import Foundation
-import Core
+import Axis
 
 public class ReqlAst {
     fileprivate let term: ReqlTerm
