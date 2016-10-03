@@ -1,4 +1,4 @@
 import Axis
 
-public protocol ReqlArg: MapFallibleRepresentable {
+public protocol ReqlArg : MapFallibleRepresentable {
 }

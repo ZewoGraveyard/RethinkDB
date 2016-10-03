@@ -3,17 +3,17 @@ import Venice
 
 
 public class Cursor {
-    
+
     internal enum Query {
         case start(token: Int64, args: Map, opts: Map?)
         case continuation(token: Int64, type: ReqlProtocol.QueryType)
     }
-    
+
     internal enum Response {
-        
+
         case success(token: Int64, results: [Map], done: Bool)
         case failure(token: Int64, error: Error)
-        
+
         var token: Int64 {
             switch self {
             case .success(let token, _, _):
@@ -22,7 +22,7 @@ public class Cursor {
                 return token
             }
         }
-        
+
         var results: [Map]? {
             switch self {
             case .success(_, let results, _):
@@ -31,7 +31,7 @@ public class Cursor {
                 return nil
             }
         }
-        
+
         var error: Error? {
             switch self {
             case .success:
@@ -40,7 +40,7 @@ public class Cursor {
                 return error
             }
         }
-        
+
         var final: Bool {
             switch self {
             case .success(_, _, let done):
@@ -49,14 +49,14 @@ public class Cursor {
                 return true
             }
         }
-        
+
         init(token: Int64, map: Map) throws {
             guard let type = ReqlProtocol.ResponseType(rawValue: map["t"].int ?? -1) else {
                 throw Error(code: .decoding, reason: "Could not decode response.")
             }
-            
+
             let results = map["r"].array
-            
+
             switch type {
             case .successAtom, .successPartial, .successSequence, .waitComplete, .serverInfo:
                 guard results != nil  else {
@@ -81,16 +81,16 @@ public class Cursor {
             }
         }
     }
-    
+
     internal let token: Int64
-    
+
     private let queryChannel: SendingChannel<Query>
     private let responseChannel: FallibleReceivingChannel<Response>
-    
+
     private var needsContinue: Bool = false
     private var finished: Bool = false
     private var remainingResults: [Map] = []
-    
+
     internal init(token: Int64,
                   queryChannel: SendingChannel<Query>,
                   responseChannel: FallibleReceivingChannel<Response>) {
@@ -101,19 +101,19 @@ public class Cursor {
     deinit {
         self.close()
     }
-    
+
     public func next() throws -> Map? {
         // if we have any remaining results return them first
         guard self.remainingResults.count == 0 else {
             return self.remainingResults.remove(at: 0)
         }
-        
+
         // if we're finished just return nil we have nothing else
         guard !self.finished else {
             self.responseChannel.close()
             return nil
         }
-        
+
         // send a new request to the server
         if self.needsContinue {
             guard !self.queryChannel.closed else {
@@ -121,28 +121,28 @@ public class Cursor {
             }
             self.queryChannel.send(.continuation(token: self.token, type: .`continue`))
         }
-        
+
         // receive a new response from server
         guard let response = try self.responseChannel.receive() else {
             throw Error(code: .connection, reason: "Unexpected end of query.")
         }
-        
+
         // check for error
         let error = response.error
         guard error == nil else {
             self.finished = true
             throw error!
         }
-        
+
         // check for results
         self.needsContinue = !response.final
         self.finished = response.final
         self.remainingResults += (response.results ?? [])
-        
+
         // enter next loop again
         return try self.next()
     }
-    
+
     public func batches(_ batch: ([Map]) throws -> Void) throws {
         while !self.finished {
             // send a new request to the server
@@ -152,35 +152,35 @@ public class Cursor {
                 }
                 self.queryChannel.send(.continuation(token: self.token, type: .`continue`))
             }
-            
+
             // receive a new response from server
             guard let response = try self.responseChannel.receive() else {
                 throw Error(code: .connection, reason: "Unexpected end of query.")
             }
-            
+
             // check for error
             let error = response.error
             guard error == nil else {
                 self.finished = true
                 throw error!
             }
-            
+
             // check for results
             self.needsContinue = !response.final
             self.finished = response.final
             self.remainingResults += (response.results ?? [])
-            
+
             // send batch
             if !self.remainingResults.isEmpty {
                 try batch(self.remainingResults)
                 self.remainingResults = []
             }
         }
-        
+
         // close channel
         self.responseChannel.close()
     }
-    
+
     public func all() throws -> [Map] {
         var all: [Map] = []
         while let n = try self.next() {
@@ -188,7 +188,7 @@ public class Cursor {
         }
         return all
     }
-    
+
     public func close() {
         guard !self.finished else {
             return
@@ -197,5 +197,5 @@ public class Cursor {
         self.queryChannel.send(.continuation(token: self.token, type: .stop))
         self.responseChannel.close()
     }
-    
+
 }

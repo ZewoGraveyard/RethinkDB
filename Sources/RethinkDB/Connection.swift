@@ -4,28 +4,28 @@ import Venice
 
 
 class Connection {
-    
+
     private enum State {
         case handshake
         case queries
     }
-    
+
     private let config: ReqlConfig
     private let queryChannel = Channel<Cursor.Query>()
-    
+
     private var nextToken: Int64 = 1
     private var closed: Bool = false
     private var buffer = Buffer()
-    
+
     private var responseChannelsByToken: [Int64: FallibleChannel<Cursor.Response>] = [:]
-    
+
     init(config: ReqlConfig) {
         self.config = config
         self.start()
     }
     deinit {
     }
-    
+
     func close() {
         self.closed = true
         guard self.responseChannelsByToken.isEmpty else {
@@ -33,34 +33,34 @@ class Connection {
         }
         self.queryChannel.close()
     }
-    
+
     func run(ast: ReqlAst, opts: ReqlGlobalOpts?) throws -> Cursor {
         // get next token
         let token = self.nextToken
         self.nextToken += 1
-        
+
         // compile the reql and convert to map
         let args = try ast.asMap()
-        
+
         // create the query
         let query = try Cursor.Query.start(token: token, args: args, opts: opts?.asMap())
-        
+
         // create a response channel
         let responseChannel: FallibleChannel<Cursor.Response> = FallibleChannel<Cursor.Response>()
-        
+
         // create a cursor
         let cursor = Cursor(token: token,
                             queryChannel: self.queryChannel.sendingChannel,
                             responseChannel: responseChannel.receivingChannel)
-        
+
         // store the response channel so we can send responses to it
         self.responseChannelsByToken[token] = responseChannel
-        
+
         // in a coroutine send the query to be accepted
         co {
             self.queryChannel.send(query)
         }
-        
+
         // return the cursor
         return cursor
     }
@@ -70,7 +70,7 @@ class Connection {
             while !self.closed {
                 // connect stream
                 let stream = self.connectStream()
-                
+
                 // query loop
                 co {
                     forSelect { when, done in
@@ -78,7 +78,7 @@ class Connection {
                             done()
                             return
                         }
-                        
+
                         when.receive(from: self.queryChannel.receivingChannel) { query in
                             do {
                                 try stream.write(query)
@@ -92,7 +92,7 @@ class Connection {
                         }
                     }
                 }
-                
+
                 // response loop
                 while !self.closed && !stream.closed {
                     do {
@@ -106,7 +106,7 @@ class Connection {
                         stream.close()
                     }
                 }
-                
+
                 // clear channels
                 for (_, channel) in self.responseChannelsByToken {
                     channel.close()
@@ -115,7 +115,7 @@ class Connection {
             }
         }
     }
-    
+
     private func connectStream() -> ConnectionStream {
         while true {
             do {
