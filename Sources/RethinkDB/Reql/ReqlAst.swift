@@ -43,11 +43,30 @@ public class ReqlAst {
     }
 }
 
+
 extension ReqlAst : ReqlArg {
     
     public func asMap() throws -> Map {
         guard cachedMap == nil else {
             return cachedMap!
+        }
+        
+        func transformArgToMap(_ arg: MapFallibleRepresentable) throws -> Map {
+            if let dict = arg as? [String: MapFallibleRepresentable] {
+                var copy: [String: Map] = [:]
+                for (key, value) in dict {
+                    copy[key] = try transformArgToMap(value)
+                }
+                return .dictionary(copy)
+            } else if let arr = arg as? [MapFallibleRepresentable] {
+                var copy: [Map] = []
+                for value in arr {
+                    copy.append(try transformArgToMap(value))
+                }
+                return .array([ReqlTerm.makeArray.rawValue.map, .array(copy)])
+            } else {
+                return try arg.asMap()
+            }
         }
         
         var map: [Map] = []
@@ -57,11 +76,7 @@ extension ReqlAst : ReqlArg {
             var argsMap: [Map] = []
             for arg in args {
                 if let arg = arg as? MapFallibleRepresentable {
-                    if arg is Array<Any> {
-                        try argsMap.append([ReqlTerm.makeArray.rawValue.asMap(), arg.asMap()].map)
-                    } else {
-                        try argsMap.append(arg.asMap())
-                    }
+                    try argsMap.append(transformArgToMap(arg))
                 } else if let arg = ReqlFunction(arg) {
                     try argsMap.append(arg.asMap())
                 } else {
